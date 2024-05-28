@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
             // create an image to store Left+Depth image
             images_left[z] = cv::Mat(720, 1280, CV_8UC4);
             images_right[z] = cv::Mat(720, 1280, CV_8UC4);
-            images_depth[z] = cv::Mat(720, 1280, CV_8UC4);
+            images_depth[z] = cv::Mat(720, 1280, CV_32FC1);
             // camera acquisition thread
             thread_pool[z] = std::thread(zed_acquisition, ref(zeds[z]), ref(images_left[z]), ref(images_right[z]), ref(images_depth[z]), ref(run), ref(images_ts[z]));
             // create windows for display
@@ -159,8 +159,10 @@ void zed_acquisition(Camera& zed, cv::Mat& image_cv_left, cv::Mat& image_cv_righ
             cv::Mat(h_low_res, w_low_res, CV_8UC4, zed_image.getPtr<sl::uchar1>(MEM::CPU)).copyTo(image_cv_left(cv::Rect(0, 0, w_low_res, h_low_res)));
             zed.retrieveImage(zed_image, VIEW::RIGHT, MEM::CPU, low_res);
             cv::Mat(h_low_res, w_low_res, CV_8UC4, zed_image.getPtr<sl::uchar1>(MEM::CPU)).copyTo(image_cv_right(cv::Rect(0, 0, w_low_res, h_low_res)));
-            zed.retrieveImage(zed_image, VIEW::DEPTH, MEM::CPU, low_res);
-            cv::Mat(h_low_res, w_low_res, CV_8UC4, zed_image.getPtr<sl::uchar1>(MEM::CPU)).copyTo(image_cv_depth(cv::Rect(0, 0, w_low_res, h_low_res)));
+            zed.retrieveMeasure(zed_image, MEASURE::DEPTH);
+            cv.Mat(h_low_res, w_low_res, CV_32FC1, zed_image.getPtr<sl.float1>(MEM::CPU)).copyTo(image_cv_depth(cv::Rect(0, 0, w_low_res, h_low_res)));
+            // zed.retrieveImage(zed_image, VIEW::DEPTH, MEM::CPU, low_res);
+            // cv::Mat(h_low_res, w_low_res, CV_8UC4, zed_image.getPtr<sl::uchar1>(MEM::CPU)).copyTo(image_cv_depth(cv::Rect(0, 0, w_low_res, h_low_res)));
             
             ts = zed.getTimestamp(TIME_REFERENCE::IMAGE);
         }
